@@ -33,7 +33,7 @@ int main(void)
 		uint16_t z = ADC_Read(2);	// PA2
 		
 		// Convert to text
-		snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u\r\n", x, y, z);
+		snprintf(buffer, sizeof(buffer), "x1=%u Y=%u Z=%u\r\n", x, y, z);
 		USART_Print(buffer);
 		
 		_delay_ms(200);
