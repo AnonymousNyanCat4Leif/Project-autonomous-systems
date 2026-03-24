@@ -5,8 +5,8 @@
  * Author : Micha
  */ 
 
-#define F_CPU 1000000UL
-#define BAUD 4800
+#define F_CPU 3676400UL
+#define BAUD 115200
 #define MYUBRR (F_CPU/16/BAUD - 1)
 
 #include <avr/io.h>
