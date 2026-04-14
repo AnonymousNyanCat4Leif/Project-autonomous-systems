@@ -24,12 +24,21 @@ int main(void)
 	pwm_Init();
 	ADC_Init();
 	
-	
-	USART_Print("Hello from 1MHz ATmega32A! Testing analog signal\r\n");
-	USART_Print("Ready. Send motor speed (0-255)...\r\n");
-	
 	// Wait for the first speed command
-	uint8_t speed = USART_Receive();
+	char c;
+	do { c = USART_Receive(); } while (c != 'S'); // This should get around noice on the BT
+
+	uint8_t speed = 0;
+	char digit;
+
+	// Now converts ASCII to numerical value. (Which is partly why we got wierd speeds before)
+	do {
+		digit = USART_Receive();
+		if (digit >= '0' && digit <= '9') {
+			speed = speed * 10 + (digit - '0');
+		}
+	} while (digit != '\n');
+
 	pwm_set_speed(speed); // Maybe 128? That should be around 50% duty cycle 
 
 	snprintf(buffer, sizeof(buffer), "Motor started at speed %u\r\n", speed);
