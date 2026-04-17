@@ -35,3 +35,10 @@ unsigned char USART_Receive( void )
 	/* Get and return received data from buffer */
 	return UDR;
 }
+
+void USART_ReceiveString(char *buffer, uint8_t length) {
+    for (uint8_t i = 0; i < length; i++) {
+        buffer[i] = USART_Receive();
+    }
+    buffer[length] = '\0';
+}

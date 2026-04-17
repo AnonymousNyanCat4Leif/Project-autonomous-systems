@@ -16,6 +16,7 @@
 #include "adc.h"
 
 char buffer[32];
+char cmd[4];
 
 int main(void)
 {
@@ -25,8 +26,10 @@ int main(void)
 	ADC_Init();
 	
 	// Wait for the first speed command
-	char c;
-	do { c = USART_Receive(); } while (c != 'S'); // This should get around noice on the BT
+	USART_ReceiveString(cmd, 3);  // expecting exactly "SPD" for example
+
+	while (strcmp(cmd, "SPD") != 0) {// do nothing
+	} ; // This should get around noice on the BT
 
 	uint8_t speed = 0;
 	char digit;
@@ -51,7 +54,7 @@ int main(void)
 		uint16_t z = ADC_Read(2);	// PA2
 		
 		// Convert to text
-		snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u\r\n", x, y, z);
+		snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u\r\n", x, y, z);	
 		USART_Print(buffer);
 		
 		_delay_ms(200);
