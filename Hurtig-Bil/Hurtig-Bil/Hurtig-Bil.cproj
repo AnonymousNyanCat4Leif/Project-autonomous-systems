@@ -129,6 +129,12 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Speedometer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Speedometer.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="usart.c">
       <SubType>compile</SubType>
     </Compile>

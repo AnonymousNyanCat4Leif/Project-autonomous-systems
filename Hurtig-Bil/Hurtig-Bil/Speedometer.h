@@ -5,10 +5,9 @@
 #ifndef SPEEDOMETER_H_
 #define SPEEDOMETER_H_ 1
 
-#define F_CPU 8000000UL 
-
 void Init_speedometer( );
 void Beregn_hastighed_og_acc( int Tn);
+char* floatstr(float x);
 
 #define MAXur 8         // Dette_tal SKAL_være 4,8,16,32
 #define ANTAL_FELTER 3  // Bør_være lig_med antallet_af felter_på_hjulet

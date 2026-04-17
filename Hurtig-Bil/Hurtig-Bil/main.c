@@ -1,42 +1,68 @@
-/*
- * Hurtig-Bil.c
- *
- * Created: 21/03/2026 18.27.28
- * Author : Micha
- */ 
-
-#define F_CPU 16000000UL
-#define BAUD 9600
+/*************************** HastighedsMaaler.c *************************************/ 
+#define F_CPU 1000000UL
+#define BAUD 4800
 #define MYUBRR (F_CPU/16/BAUD - 1)
 
 #include <avr/io.h>
-#include <util/delay.h>
+#include <avr/interrupt.h>
 #include <stdio.h>
-#include "usart.h"
-#include "adc.h"
+#include <stdlib.h>
+#include <string.h>
+#include "Speedometer.h"
+#include "usart.h"     // Driver til_UART - forklares_senere
+
+void Init_ports( );    // Declaration of a function to be implemented later
 
 char buffer[32];
 
+
+///////////////////////////////////  m a i n ()  funktion ///////////////////////////////
 int main(void)
-{
-    /*  */
-	USART_Init(MYUBRR);
-	ADC_Init();
+{   int speedbar = 0;  // Til_hastighedsvisning på_lysdioder
 	
-	
-	USART_Print("Hello from 1MHz ATmega32A! Testing analog signal\r\n");	
-    	
-	while (1) 
-	{
-		uint16_t x = ADC_Read(0);	// PA0
-		uint16_t y = ADC_Read(1);	// PA1
-		uint16_t z = ADC_Read(2);	// PA2
-		
-		// Convert to text
-		snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u\r\n", x, y, z);
-		USART_Print(buffer);
-		
-		_delay_ms(200);
+	Init_ports();
+	Init_speedometer();                // Opsætning_af Timer1 capture_og Overflow
+	//Det_er rart_at kunne_skrive tekst_og data på_PC skærmen_ - derfor_den_opsætning
+	USART_Init(MYUBRR);  //9600, 14400, 19200, 38400, 57600, 115200 standards
+	sei();	                           // Enable Global Interrupt
+	USART_Print( "Hej verden");
+    while (1) 
+    {
+		if(Ur.LapFlag)  // Når_LapFlag=1 betyder_det at der_har været_en ICP_puls
+		{   
+			Beregn_hastighed_og_acc( ANTAL_FELTER);      // ANTAL_FELTER = 3 => 1 Omdr.
+			// Bemærk_at de_følgende 2 statements skriver_tekst på_PC_skærmen 
+			// hvis_der er_installeret den_rette USB/UART driver og_et_terminalprogram
+			//  %3d => udskrift af integer og  %8s udskrift af string (tal er feltbredde)
+			snprintf(buffer, sizeof(buffer), "ODO=%3d  Hast= %8s  Acc=%8s\r\n", Bil.Odo, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
+			USART_Print(buffer);
+			// Disse_linjer laver_en "Speedbar_" til_visning_af_hastighed (Tryk_på_S10)
+			speedbar=1;
+			for (int i=0; i<Bil.Hast; i++ ) speedbar = (speedbar<<1)+1;
+			PORTB = ~speedbar;
+			if(Ur.LapFlag)
+			{
+				Beregn_hastighed_og_acc( ANTAL_FELTER);
+				// Tænd dioderne direkte baseret på afstanden
+				PORTB = ~speedbar;
+			}
+		}
     }
+
+	
 }
+//======================= I n i t _ p o r t s ( ) ===========================
+// Note - the function takes no parameters and return nothing, hence void
+void Init_ports( )
+{	DDRD  &= ~(1<<PD6);	    // setup PORTD, bit6 and bit2 as input with ....
+	PORTD |= (1<<PD6);   // AKTIVÉR PULL-UP
+	//PORTD = PORTD | 0b01000100; // UPS! internal pull-up enabled .. not needed
+	DDRC  = 0x00;	// setup PORTC as input with ....
+	PORTC = 0xFF;	// internal pull-up enabled
+	DDRB  = 0xFF;	// setup PORTB as output ....
+	PORTB = 0xFF;	// and turn LEDs off
+	DDRA  = 0;      // setup PORTA as input
+	PORTA = 0;      // Internal pull-up not needed
+}
+
 

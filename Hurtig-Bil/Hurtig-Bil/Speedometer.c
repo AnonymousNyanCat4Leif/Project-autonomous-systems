@@ -67,3 +67,10 @@ void Beregn_hastighed_og_acc( int Tn)
 	Bil.Acc = 10*Bil.Acceleration;   // Lagre_acc (10 er_tilfældigt_valgt)
 }
 
+
+char* floatstr(float x) {
+    static char s[10];
+    dtostrf(x, 6, 2, s);
+    return s;
+}
+
