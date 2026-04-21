@@ -14,9 +14,13 @@
 #include <stdio.h>
 #include "usart.h"
 #include "adc.h"
+#include "pwm.h"
+#include "timer2.h"
 
 char buffer[32];
 char cmd[4];
+
+
 
 int main(void)
 {
@@ -24,40 +28,53 @@ int main(void)
 	USART_Init(MYUBRR);
 	pwm_Init();
 	ADC_Init();
-	
-	// Wait for the first speed command
-	USART_ReceiveString(cmd, 3);  // expecting exactly "SPD" for example
-
-	while (strcmp(cmd, "SPD") != 0) {// do nothing
-	} ; // This should get around noice on the BT
+	timer2_init();
+	sei();
 
 	uint8_t speed = 0;
-	char digit;
+	uint8_t lock = 0;
 
-	// Now converts ASCII to numerical value. (Which is partly why we got wierd speeds before)
-	do {
-		digit = USART_Receive();
-		if (digit >= '0' && digit <= '9') {
-			speed = speed * 10 + (digit - '0');
-		}
-	} while (digit != '\n');
 
-	pwm_set_speed(speed); // Maybe 128? That should be around 50% duty cycle 
-
-	snprintf(buffer, sizeof(buffer), "Motor started at speed %u\r\n", speed);
-	USART_Print(buffer);
-    	
 	while (1) 
 	{
-		uint16_t x = ADC_Read(0);	// PA0
-		uint16_t y = ADC_Read(1);	// PA1
-		uint16_t z = ADC_Read(2);	// PA2
-		
-		// Convert to text
-		snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u\r\n", x, y, z);	
-		USART_Print(buffer);
-		
-		_delay_ms(200);
+		uint16_t value = USART_Receive;
+
+		if (value >=0){ // Wait for the first speed command
+			char c = (char)value;
+
+			switch (lock)
+			{
+			case 0:	// confirms it is an actual value and not noice
+				if (c == 's'){
+					speed = 0;
+					lock = 1;
+				}
+				break;
+
+			case 1: // reading value and convert ASCII to numerical value.
+				if (c >= '0' && c <= '9') {
+					speed = speed * 10 + (c - '0');
+				}
+				else if (c == '\n'){
+					pwm_set_speed(speed);
+					snprintf(buffer, sizeof(buffer), "Motor started at speed %u\r\n", speed);
+					USART_Print(buffer);
+					lock = 0; // go pack to waiting for the next speed command
+				}
+			}
+		}
+
+
+		if (tick200ms) {
+            tick200ms = 0;
+
+            uint16_t x = ADC_Read(0);
+            uint16_t y = ADC_Read(1);
+            uint16_t z = ADC_Read(2);
+
+            snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u\r\n", x, y, z);
+            USART_Print(buffer);
+        }
     }
 }
 

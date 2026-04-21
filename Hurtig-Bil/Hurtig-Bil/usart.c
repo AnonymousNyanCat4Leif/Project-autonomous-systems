@@ -29,16 +29,8 @@ void USART_Print(const char *str)
 
 unsigned char USART_Receive( void )
 {
-	/* Wait for data to be received */
-	while ( !(UCSRA & (1<<RXC)) )
-		;
-	/* Get and return received data from buffer */
-	return UDR;
-}
-
-void USART_ReceiveString(char *buffer, uint8_t length) {
-    for (uint8_t i = 0; i < length; i++) {
-        buffer[i] = USART_Receive();
-    }
-    buffer[length] = '\0';
+	if (UCSR1 &(1<<RXC)){
+		return UDR
+	}
+	return -1
 }
