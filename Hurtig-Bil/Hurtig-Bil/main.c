@@ -12,13 +12,13 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdio.h>
+#include <avr/interrupt.h>
 #include "usart.h"
 #include "adc.h"
 #include "pwm.h"
-#include "timer2.h"
+#include "timer.h"
 
-char buffer[32];
-char cmd[4];
+char buffer[52];
 
 
 
@@ -36,10 +36,10 @@ int main(void)
 
 
 	while (1) 
-	{
-		uint16_t value = USART_Receive;
-
-		if (value >=0){ // Wait for the first speed command
+	{		
+		int value = USART_Receive();
+//
+		if (value >=0){ // Wait for the first speed 
 			char c = (char)value;
 
 			switch (lock)
@@ -55,7 +55,7 @@ int main(void)
 				if (c >= '0' && c <= '9') {
 					speed = speed * 10 + (c - '0');
 				}
-				else if (c == '\n'){
+				else if (c == '\r' || c == '\n'){
 					pwm_set_speed(speed);
 					snprintf(buffer, sizeof(buffer), "Motor started at speed %u\r\n", speed);
 					USART_Print(buffer);
@@ -64,7 +64,6 @@ int main(void)
 			}
 		}
 
-
 		if (tick200ms) {
             tick200ms = 0;
 
@@ -72,7 +71,7 @@ int main(void)
             uint16_t y = ADC_Read(1);
             uint16_t z = ADC_Read(2);
 
-            snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u\r\n", x, y, z);
+            snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u Value=%u\r\n", x, y, z, speed);
             USART_Print(buffer);
         }
     }
