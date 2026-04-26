@@ -14,5 +14,6 @@
 void USART_Init(unsigned int ubrr_value);
 void USART_Transmit(unsigned char data);
 void USART_Print(const char *str);
+int USART_Receive(void);
 
 #endif /* USART_H_ */
