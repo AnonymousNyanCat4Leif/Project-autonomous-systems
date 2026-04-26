@@ -27,10 +27,10 @@ void USART_Print(const char *str)
 	while (*str) USART_Transmit(*str++);
 }
 
-unsigned char USART_Receive( void )
+int USART_Receive( void )
 {
-	if (UCSR1 &(1<<RXC)){
-		return UDR
+	if (UCSRA &(1<<RXC)){
+		return UDR;
 	}
-	return -1
+	return -1;
 }

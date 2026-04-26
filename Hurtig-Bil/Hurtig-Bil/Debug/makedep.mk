@@ -8,5 +8,7 @@ main.c
 
 pwm.c
 
+timer.c
+
 usart.c
 
