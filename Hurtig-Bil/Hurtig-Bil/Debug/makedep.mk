@@ -6,7 +6,7 @@ adc.c
 
 main.c
 
-Speedometer.c
+Speexxdometer.c
 
 usart.c
 

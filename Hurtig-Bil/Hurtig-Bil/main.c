@@ -13,7 +13,7 @@
 
 void Init_ports( );    // Declaration of a function to be implemented later
 
-char buffer[32];
+char buffer[52];
 
 
 ///////////////////////////////////  m a i n ()  funktion ///////////////////////////////

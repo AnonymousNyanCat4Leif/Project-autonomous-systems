@@ -3,7 +3,7 @@
 #include <avr/interrupt.h>
 #include "Speedometer.h"
 
-#define PULS_AFSTAND 1000.0  // Dette_tal skal_justeres til_brug i_bilen( svarer til omkredsen af hjul)
+#define PULS_AFSTAND 0.069*1000000  // Dette_tal skal_justeres til_brug i_bilen( svarer til omkredsen af hjul)
 
 //////////// I n i t _ s p e e d o m e t e r ( ) //////////////////////////////
 // Denne_funktion_initialiserer timer1 med "input capture" (altså_et_stopur)
@@ -68,9 +68,11 @@ void Beregn_hastighed_og_acc( int Tn)
 }
 
 
-char* floatstr(float x) {
-    static char s[10];
-    dtostrf(x, 6, 2, s);
-    return s;
+char* floatstr(float tal) {
+	static int x = 0;
+	static char str[2][12];  // Static - important in order to keep the string // kommer fra JJ's kode
+	x=(x+1)&1;               // change the string
+    dtostrf(tal, 6, 2, str[x]);
+    return str[x];
 }
 
