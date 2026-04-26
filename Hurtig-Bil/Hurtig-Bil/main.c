@@ -93,15 +93,6 @@ int main(void)
 			snprintf(buffer, sizeof(buffer), "ODO=%3d  Hast= %8s  Acc=%8s\r\n", Bil.Odo, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
 			USART_Print(buffer);
 			// Disse_linjer laver_en "Speedbar_" til_visning_af_hastighed (Tryk_p�_S10)
-			speedbar=1;
-			for (int i=0; i<Bil.Hast; i++ ) speedbar = (speedbar<<1)+1;
-			PORTB = ~speedbar;
-			if(Ur.LapFlag)
-			{
-				Beregn_hastighed_og_acc( ANTAL_FELTER);
-				// T�nd dioderne direkte baseret p� afstanden
-				PORTB = ~speedbar;
-			}
 		}
     }
 
@@ -115,8 +106,6 @@ void Init_ports( )
 	//PORTD = PORTD | 0b01000100; // UPS! internal pull-up enabled .. not needed
 	DDRC  = 0x00;	// setup PORTC as input with ....
 	PORTC = 0xFF;	// internal pull-up enabled
-	DDRB  = 0xFF;	// setup PORTB as output ....
-	PORTB = 0xFF;	// and turn LEDs off
 }
 
 
