@@ -117,8 +117,6 @@ void Init_ports( )
 	PORTC = 0xFF;	// internal pull-up enabled
 	DDRB  = 0xFF;	// setup PORTB as output ....
 	PORTB = 0xFF;	// and turn LEDs off
-	DDRA  = 0;      // setup PORTA as input
-	PORTA = 0;      // Internal pull-up not needed
 }
 
 
