@@ -6,6 +6,7 @@ adc.c
 
 main.c
 
+Speexxdometer.c
 pwm.c
 
 timer.c

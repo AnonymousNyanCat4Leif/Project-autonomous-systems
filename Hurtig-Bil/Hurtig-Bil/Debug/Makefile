@@ -39,6 +39,7 @@ SUBDIRS :=
 C_SRCS +=  \
 ../adc.c \
 ../main.c \
+../Speexxdometer.c \
 ../pwm.c \
 ../timer.c \
 ../usart.c
@@ -53,6 +54,7 @@ ASM_SRCS +=
 OBJS +=  \
 adc.o \
 main.o \
+Speexxdometer.o \
 pwm.o \
 timer.o \
 usart.o
@@ -60,6 +62,7 @@ usart.o
 OBJS_AS_ARGS +=  \
 adc.o \
 main.o \
+Speexxdometer.o \
 pwm.o \
 timer.o \
 usart.o
@@ -67,6 +70,7 @@ usart.o
 C_DEPS +=  \
 adc.d \
 main.d \
+Speexxdometer.d \
 pwm.d \
 timer.d \
 usart.d
@@ -74,6 +78,7 @@ usart.d
 C_DEPS_AS_ARGS +=  \
 adc.d \
 main.d \
+Speexxdometer.d \
 pwm.d \
 timer.d \
 usart.d
@@ -106,6 +111,7 @@ LINKER_SCRIPT_DEP+=
 	@echo Finished building: $<
 	
 
+./Speexxdometer.o: .././Speexxdometer.c
 ./pwm.o: .././pwm.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
