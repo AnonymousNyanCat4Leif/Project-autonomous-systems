@@ -19,9 +19,12 @@
 #include "adc.h"
 #include "pwm.h"
 #include "timer.h"
+#include "maalstreg.h"
 
 void Init_ports( );    // Declaration of a function to be implemented later
 
+
+extern volatile uint16_t lap_count;
 char buffer[52];
 
 
@@ -38,10 +41,12 @@ int main(void)
 	pwm_Init();
 	ADC_Init();
 	timer2_init();
+	INT0_init();
 	sei();
 
 	uint8_t speed = 0;
 	uint8_t lock = 0;
+	uint8_t last_lap_count = 0;
 
 
 	while (1) 
@@ -93,6 +98,13 @@ int main(void)
 			snprintf(buffer, sizeof(buffer), "ODO=%3d  Hast= %8s  Acc=%8s\r\n", Bil.Odo, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
 			USART_Print(buffer);
 			// Disse_linjer laver_en "Speedbar_" til_visning_af_hastighed (Tryk_p�_S10)
+		}
+
+		if (lap_count != last_lap_count)
+		{
+			last_lap_count = lap_count;
+			snprintf(buffer, sizeof(buffer), "Bilen er paa sin %u omgang\r\n", lap_count);
+			USART_Print(buffer);
 		}
     }
 
