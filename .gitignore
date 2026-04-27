@@ -41,12 +41,6 @@
 *.su
 *.idb
 *.pdb
-*.atsuo
-*.lss
-*.srec
-*Makefile
-*.mk
-*.cproj
 
 
 # Kernel Module Compile Results
