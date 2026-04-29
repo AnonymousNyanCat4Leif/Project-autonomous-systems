@@ -20,6 +20,7 @@
 #include "pwm.h"
 #include "timer.h"
 #include "maalstreg.h"
+#include "bane.h"
 
 void Init_ports( );    // Declaration of a function to be implemented later
 
@@ -84,6 +85,8 @@ int main(void)
             uint16_t x = ADC_Read(0);
             uint16_t y = ADC_Read(1);
             uint16_t z = ADC_Read(2);
+			
+			bane_opmaaling(x);
 
             snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u Value=%u\r\n", x, y, z, speed);
             USART_Print(buffer);
@@ -105,7 +108,18 @@ int main(void)
 			last_lap_count = lap_count;
 			snprintf(buffer, sizeof(buffer), "Bilen er paa sin %u omgang\r\n", lap_count);
 			USART_Print(buffer);
+			
+			if (lap_count == 1) {
+				bane_build_segments(); // første omgang er færdig her og bygger bane
+			
+			snprintf(buffer, sizeof(buffer), "Segmenter bygget\r\n")
+			USART_Print(buffer);
+			}
+			
 		}
+			if (lap_count > 1){
+				bane_run();
+				//bane_update_learning(); den skal tilføjes senere åbenbart
     }
 
 	

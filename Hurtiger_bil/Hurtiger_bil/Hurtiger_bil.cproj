@@ -126,6 +126,12 @@
     <Compile Include="adc.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="bane.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="bane.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="maalstreg.c">
       <SubType>compile</SubType>
     </Compile>
