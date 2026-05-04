@@ -53,7 +53,7 @@ void bane_reset(void)
 	bane_index = 0;
 	state = LIGE;
 }
-// Husk Bil.Odo måler afstand målt i pulstællinger
+// Husk Bil.Odo mÃ¥ler afstand mÃ¥lt i pulstÃ¦llinger
 //gemmer segmenter 
 
 typedef struct {
@@ -74,12 +74,12 @@ typedef struct {
 		for (int i = 0; i < bane_index -1; i += 2){
 		segments[segment_count].start = bane[i];
 		segments[segment_count].end   = bane[i+1];
-		segments[segment_count].speed = 60; //det en start værdi 
+		segments[segment_count].speed = 60; //det en start vÃ¦rdi 
 		
 		segment_count++;
 		}
 	}
-	//her finder den hvor bilen befinder sig på banen gennem segmenter
+	//her finder den hvor bilen befinder sig pÃ¥ banen gennem segmenter
 	
 	int find_segment(uint16_t odo)
 	{
@@ -98,7 +98,7 @@ typedef struct {
 		if (seg >= 0){
 			pwm_set_speed(segments[seg].speed);
 			
-			//printer en fart når segmenterne ændre sig
+			//printer en fart nÃ¥r segmenterne Ã¦ndre sig
 			if (seg != last_seg){
 				last_seg = seg;
 				
@@ -120,9 +120,9 @@ typedef struct {
 			segments[seg].speed += 1;
 		}
 	
-	//her kommer der nogle begrænsninger 
+	//her kommer der nogle begrÃ¦nsninger 
 	if (segments[seg].speed > 100) segments[seg].speed = 100;
-	if (segments[seg].speed > 40)  segments[seg].speed = 40;	
+	if (segments[seg].speed < 40)  segments[seg].speed = 40;	
 	}
 	
 	
