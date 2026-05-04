@@ -5,6 +5,7 @@
  *  Author: bobby
  */ 
 
+#include <stdio.h>
 #include "bane.h"
 #include "Speedometer.h"
 #include "pwm.h"
@@ -57,7 +58,7 @@ void bane_reset(void)
 //gemmer segmenter 
 
 typedef struct {
-	uint16_t start:
+	uint16_t start;
 	uint16_t end;
 	uint8_t speed;
 	} Segment;
@@ -66,6 +67,8 @@ typedef struct {
 	
 	Segment segments[MAX_SEG];
 	uint8_t segment_count = 0;
+	uint8_t last_seg = 0;
+
 	
 	void bane_build_segments(void)
 	{
@@ -102,7 +105,7 @@ typedef struct {
 			if (seg != last_seg){
 				last_seg = seg;
 				
-				snprintf(buffer, sizeof(buffer), "segment %d, speed %u\r\n", seg, Segment[seg].speed);
+				snprintf(buffer, sizeof(buffer), "segment %d, speed %u\r\n", seg, segments[seg].speed);
 				USART_Print(buffer);
 			}
 		}

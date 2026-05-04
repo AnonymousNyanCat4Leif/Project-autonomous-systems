@@ -4,6 +4,8 @@
 
 adc.c
 
+bane.c
+
 maalstreg.c
 
 main.c

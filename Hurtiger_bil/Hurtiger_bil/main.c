@@ -112,7 +112,7 @@ int main(void)
 			if (lap_count == 1) {
 				bane_build_segments(); // første omgang er færdig her og bygger bane
 			
-			snprintf(buffer, sizeof(buffer), "Segmenter bygget\r\n")
+			snprintf(buffer, sizeof(buffer), "Segmenter bygget\r\n");
 			USART_Print(buffer);
 			}
 			
@@ -122,7 +122,7 @@ int main(void)
 				//bane_update_learning(); den skal tilføjes senere åbenbart
     }
 
-	
+	}
 }
 //======================= I n i t _ p o r t s ( ) ===========================
 // Note - the function takes no parameters and return nothing, hence void
