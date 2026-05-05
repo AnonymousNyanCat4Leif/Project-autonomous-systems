@@ -3,6 +3,6 @@
 
 void timer2_init(void);
 
-extern volatile uint8_t tick200ms;
+extern volatile uint8_t tick5ms;
 
 #endif
