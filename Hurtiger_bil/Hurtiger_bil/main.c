@@ -5,8 +5,8 @@
  * Author : Micha
  */ 
 
-#define F_CPU 16000000UL
-#define BAUD 9600
+#define F_CPU 1000000UL
+#define BAUD 4800
 #define MYUBRR (F_CPU/16/BAUD - 1)
 
 #include <avr/io.h>
@@ -26,7 +26,7 @@ void Init_ports( );    // Declaration of a function to be implemented later
 
 
 extern volatile uint16_t lap_count;
-char buffer[52];
+char buffer[256];
 
 
 ///////////////////////////////////  m a i n ()  funktion ///////////////////////////////
@@ -48,6 +48,9 @@ int main(void)
 	uint8_t speed = 0;
 	uint8_t lock = 0;
 	uint8_t last_lap_count = 0;
+	uint16_t filtered = 0;
+	uint8_t debug_counter = 0;
+	uint16_t accel_x = 0;
 
 
 	while (1) 
@@ -79,17 +82,25 @@ int main(void)
 			}
 		}
 
-		if (tick200ms) {
-            tick200ms = 0;
+		if (tick5ms) 
+		{
+            tick5ms = 0;
+			uint16_t accel = ADC_Read(0);
 
-            uint16_t x = ADC_Read(0);
-            uint16_t y = ADC_Read(1);
-            uint16_t z = ADC_Read(2);
+			filtered = (filtered * 3 + accel) / 4;
+			bane_opmaaling(filtered);
 			
-			bane_opmaaling(x);
-
-            snprintf(buffer, sizeof(buffer), "X=%u Y=%u Z=%u Value=%u\r\n", x, y, z, speed);
-            USART_Print(buffer);
+			if (++debug_counter >= 20) 
+			{
+				debug_counter = 0;
+				if (accel_x < accel)
+				{
+					accel_x = accel;
+				}
+				
+				snprintf(buffer, sizeof(buffer), "\rX=%u Speed=%u ODO=%3d Hast=%8s Acc=%8s TopX=%u       ", filtered, speed, Bil.Odo, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration), accel_x);
+				USART_Print(buffer);
+			}
         }
 
 		if(Ur.LapFlag)  // N�r_LapFlag=1 betyder_det at der_har v�ret_en ICP_puls
@@ -98,29 +109,28 @@ int main(void)
 			// Bem�rk_at de_f�lgende 2 statements skriver_tekst p�_PC_sk�rmen 
 			// hvis_der er_installeret den_rette USB/UART driver og_et_terminalprogram
 			//  %3d => udskrift af integer og  %8s udskrift af string (tal er feltbredde)
-			snprintf(buffer, sizeof(buffer), "ODO=%3d  Hast= %8s  Acc=%8s\r\n", Bil.Odo, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
-			USART_Print(buffer);
-			// Disse_linjer laver_en "Speedbar_" til_visning_af_hastighed (Tryk_p�_S10)
 		}
 
 		if (lap_count != last_lap_count)
 		{
 			last_lap_count = lap_count;
-			snprintf(buffer, sizeof(buffer), "Bilen er paa sin %u omgang\r\n", lap_count);
+			snprintf(buffer, sizeof(buffer), "\r                                                                                           lap = %u", lap_count);
 			USART_Print(buffer);
 			
-			if (lap_count == 1) {
+			if (lap_count == 1)
+			{
 				bane_build_segments(); // første omgang er færdig her og bygger bane
 			
-			snprintf(buffer, sizeof(buffer), "Segmenter bygget\r\n");
+			snprintf(buffer, sizeof(buffer), "\r                                                                                                       Segmenter bygget!");
 			USART_Print(buffer);
 			}
 			
 		}
-			if (lap_count > 1){
+		if (lap_count > 1)
+		{
 				bane_run();
 				//bane_update_learning(); den skal tilføjes senere åbenbart
-    }
+		}
 
 	}
 }
