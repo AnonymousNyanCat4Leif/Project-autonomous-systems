@@ -1,4 +1,6 @@
 #include "maalstreg.h"
+#include "Speedometer.h"
+extern struct Bil_t Bil;
 
 #define MAX_LAPS 50
 
@@ -21,12 +23,16 @@ void INT0_init(void)
 
 ISR(INT0_vect)
 {
-	// Gem i historik (kan sl�s fra)
-	if (lap_count < MAX_LAPS)
+	static uint16_t last_odo = 0;
+	if((Bil.Odo - last_odo)>50)
 	{
-		lap_count++;
-	} else if (lap_count >= MAX_LAPS)
-	{
-		lap_count = 0;
+		// Gem i historik (kan sl�s fra)
+		if (lap_count < MAX_LAPS)
+		{
+			lap_count++;
+		} else if (lap_count >= MAX_LAPS)
+		{
+			lap_count = 0;
+		}
 	}
 }

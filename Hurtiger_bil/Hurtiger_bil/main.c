@@ -86,6 +86,8 @@ int main(void)
 		{
             tick5ms = 0;
 			uint16_t accel = ADC_Read(0);
+			uint16_t accely = ADC_Read(1);
+			uint16_t accelz = ADC_Read(2);
 
 			filtered = (filtered * 3 + accel) / 4;
 			bane_opmaaling(filtered);
@@ -98,7 +100,7 @@ int main(void)
 					accel_x = accel;
 				}
 				
-				snprintf(buffer, sizeof(buffer), "\rX=%u Speed=%u ODO=%3d Hast=%8s Acc=%8s TopX=%u       ", filtered, speed, Bil.Odo, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration), accel_x);
+				snprintf(buffer, sizeof(buffer), "\rX=%u Y=%u Z=%u Speed=%u ODO=%3d Hast=%8s Acc=%8s TopX=%u       ", filtered, accely, accelz, speed, Bil.Odo, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration), accel_x);
 				USART_Print(buffer);
 			}
         }

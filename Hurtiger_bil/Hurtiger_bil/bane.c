@@ -37,6 +37,8 @@ void bane_opmaaling(uint16_t accel_x)
 	{
 		state = SVING;
 		
+		USART_Transmit('s');
+		
 		if (bane_index < MAX_SEGMENTS)
 		{
 			bane[bane_index++] = Bil.Odo;
@@ -45,15 +47,19 @@ void bane_opmaaling(uint16_t accel_x)
 	if (state == LIGE && accel_x < TURN_LOW)
 	{
 		state = SVING;
+		
+		USART_Transmit('s');
 	
 		if (bane_index < MAX_SEGMENTS)
 		{
 			bane[bane_index++] = Bil.Odo; 
 		}
 	}
-	if (state == SVING && accel_x > TURN_LOW && accel_x < TURN_HIGH)
+	if (state == SVING && accel_x > LOWER_STRAIGHT && accel_x < UPPER_STRAIGHT)
 	{
 		state = LIGE;
+		
+		USART_Transmit('s');
 		
 		if (bane_index < MAX_SEGMENTS)
 		{
