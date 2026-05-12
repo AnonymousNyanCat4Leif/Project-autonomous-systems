@@ -11,7 +11,13 @@
 
 #include <stdint.h>
 
-void bane_opmaaling(uint16_t accel_x);
+typedef enum {
+	LIGE,
+	SVING
+} state_t;
+
+void bane_opmaaling(state_t);
+state_t swing_detect(uint16_t accel_x);
 void bane_reset(void);
 
 // Nye ting så bilen kan lære banen 

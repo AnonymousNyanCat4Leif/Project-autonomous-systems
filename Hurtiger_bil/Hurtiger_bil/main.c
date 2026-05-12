@@ -5,8 +5,8 @@
  * Author : Micha
  */ 
 
-#define F_CPU 1000000UL
-#define BAUD 4800
+#define F_CPU 16000000UL
+#define BAUD 9600
 #define MYUBRR (F_CPU/16/BAUD - 1)
 
 #include <avr/io.h>
@@ -48,9 +48,13 @@ int main(void)
 	uint8_t speed = 0;
 	uint8_t lock = 0;
 	uint8_t last_lap_count = 0;
-	uint16_t filtered = 0;
+	uint16_t filtered = 320;
 	uint8_t debug_counter = 0;
 	uint16_t accel_x = 0;
+	state_t current_state = LIGE;
+	uint16_t size = 15;
+	uint16_t rolling[15];
+	uint8_t index_rolling = 0;
 
 
 	while (1) 
@@ -81,26 +85,43 @@ int main(void)
 				}
 			}
 		}
+		
 
 		if (tick5ms) 
 		{
             tick5ms = 0;
-			uint16_t accel = ADC_Read(0);
-			uint16_t accely = ADC_Read(1);
-			uint16_t accelz = ADC_Read(2);
-
-			filtered = (filtered * 3 + accel) / 4;
-			bane_opmaaling(filtered);
+			
+			uint16_t accel = ADC_Read(2);
+			
+			//filtered = (filtered * 3 + accel) / 4;
+			rolling[index_rolling] = accel;
+			index_rolling = (index_rolling + 1) % size;
+			filtered = 0;
+			for (uint8_t i = 0; i < size; i++)
+			{
+				filtered += rolling[i];
+			}
+			filtered = filtered/size;
+			
+			
+			char state = swing_detect(filtered);
+			if (state != current_state)
+			{
+				current_state = state;
+				bane_opmaaling(state);
+			}
+			
+			if (accel_x < accel)
+			{
+				accel_x = accel;
+			}
+			
 			
 			if (++debug_counter >= 20) 
 			{
 				debug_counter = 0;
-				if (accel_x < accel)
-				{
-					accel_x = accel;
-				}
 				
-				snprintf(buffer, sizeof(buffer), "\rX=%u Y=%u Z=%u Speed=%u ODO=%3d Hast=%8s Acc=%8s TopX=%u       ", filtered, accely, accelz, speed, Bil.Odo, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration), accel_x);
+				snprintf(buffer, sizeof(buffer), "\rX=%u Speed=%u ODO=%3d TopX=%u       ", filtered, speed, Bil.Odo, accel_x);
 				USART_Print(buffer);
 			}
         }

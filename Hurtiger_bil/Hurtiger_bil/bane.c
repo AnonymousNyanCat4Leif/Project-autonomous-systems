@@ -11,11 +11,13 @@
 #include "pwm.h"
 #include "usart.h"
 
-#define TURN_HIGH 600
-#define UPPER_STRAIGHT 500
-#define LOWER_STRAIGHT 400
-#define TURN_LOW 300
+#define HYSTERESIS 20
+#define TURN 30
+#define STRAIGHT 338
 #define MAX_SEGMENTS 50
+#define ENTER_COUNT 4
+#define EXIT_COUNT  10
+
 
 char buffer[64]; 
 
@@ -23,50 +25,45 @@ extern struct Bil_t Bil;
 
 uint16_t bane[MAX_SEGMENTS];
 uint8_t bane_index = 0;
-
-typedef enum {
-	LIGE,
-	SVING
-} state_t;
 	
 static state_t state = LIGE;
 	
-void bane_opmaaling(uint16_t accel_x)
+state_t swing_detect(uint16_t accel_x)
 {
-	if (state == LIGE && accel_x > TURN_HIGH)
+	static state_t state = LIGE;
+
+	if (state == LIGE)
 	{
-		state = SVING;
-		
-		USART_Transmit('s');
-		
-		if (bane_index < MAX_SEGMENTS)
+		if (accel_x < STRAIGHT-TURN || accel_x > STRAIGHT+TURN)
 		{
-			bane[bane_index++] = Bil.Odo;
+			state = SVING;
+		}	
+	}
+	else // SVING
+	{
+		if (accel_x > (STRAIGHT-TURN)+HYSTERESIS && accel_x < (STRAIGHT+TURN)-HYSTERESIS)
+		{
+			state = LIGE;
 		}
 	}
-	if (state == LIGE && accel_x < TURN_LOW)
-	{
-		state = SVING;
-		
-		USART_Transmit('s');
-	
-		if (bane_index < MAX_SEGMENTS)
-		{
-			bane[bane_index++] = Bil.Odo; 
-		}
-	}
-	if (state == SVING && accel_x > LOWER_STRAIGHT && accel_x < UPPER_STRAIGHT)
-	{
-		state = LIGE;
-		
-		USART_Transmit('s');
-		
-		if (bane_index < MAX_SEGMENTS)
-		{
-			bane[bane_index++] = Bil.Odo;
-		}
-	}
+	return state;
 }
+
+void bane_opmaaling(state_t state)
+{
+	if (bane_index < MAX_SEGMENTS)
+	{
+		bane[bane_index++] = Bil.Odo;
+		if (state == LIGE)
+		{
+			USART_Transmit('l');
+		} else
+		{
+			USART_Transmit('s');
+		}
+	}	
+}
+
 
 void bane_reset(void)
 {
@@ -100,7 +97,7 @@ void bane_build_segments(void)
 		segments[segment_count].end   = bane[i+1];
 		if (segment_count % 2 == 1)
 		{
-			segments[segment_count].speed = 255; 
+			segments[segment_count].speed = 100; 
 		} else {
 			segments[segment_count].speed = 60;
 		}

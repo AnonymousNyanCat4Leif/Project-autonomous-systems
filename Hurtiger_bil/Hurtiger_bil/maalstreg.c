@@ -34,5 +34,6 @@ ISR(INT0_vect)
 		{
 			lap_count = 0;
 		}
+		last_odo = Bil.Odo;
 	}
 }
