@@ -16,6 +16,13 @@ typedef enum {
 	SVING
 } state_t;
 
+typedef struct {
+	uint16_t start;
+	uint16_t end;
+	uint8_t speed;
+	state_t type;
+} Segment;
+
 void bane_opmaaling(state_t);
 state_t swing_detect(uint16_t accel_x);
 void bane_reset(void);

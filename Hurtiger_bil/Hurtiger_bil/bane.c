@@ -25,6 +25,10 @@ extern struct Bil_t Bil;
 
 uint16_t bane[MAX_SEGMENTS];
 uint8_t bane_index = 0;
+uint16_t oldOdo = 0;
+uint16_t lenght = 0;
+uint8_t count = 0;
+Segment segments[MAX_SEGMENTS];
 	
 static state_t state = LIGE;
 	
@@ -54,13 +58,21 @@ void bane_opmaaling(state_t state)
 	if (bane_index < MAX_SEGMENTS)
 	{
 		bane[bane_index++] = Bil.Odo;
+		lenght = Bil.Odo - oldOdo;
 		if (state == LIGE)
 		{
-			USART_Transmit('l');
+			snprintf(buffer, sizeof(buffer), "l %u", lenght);
+			USART_Print(buffer);
+			segments[count].type = LIGE;
+			count++;
 		} else
 		{
-			USART_Transmit('s');
+			snprintf(buffer, sizeof(buffer), "s %u", lenght);
+			USART_Print(buffer);
+			segments[count].type = SVING;
+			count++;
 		}
+		oldOdo = Bil.Odo;
 	}	
 }
 
@@ -73,15 +85,7 @@ void bane_reset(void)
 // Husk Bil.Odo måler afstand målt i pulstællinger
 //gemmer segmenter 
 
-typedef struct {
-	uint16_t start;
-	uint16_t end;
-	uint8_t speed;
-} Segment;
 	
-#define MAX_SEG 25
-	
-Segment segments[MAX_SEG];
 uint8_t segment_count = 0;
 uint8_t last_seg = 0;
 uint16_t track_length = 0;
@@ -91,11 +95,11 @@ void bane_build_segments(void)
 {
 	segment_count = 0;
 		
-	for (int i = 0; i < bane_index -1; i += 2)
+	for (int i = 0; i < bane_index -1; i++)
 	{
 		segments[segment_count].start = bane[i];
 		segments[segment_count].end   = bane[i+1];
-		if (segment_count % 2 == 1)
+		if (segments[segment_count].type == LIGE)
 		{
 			segments[segment_count].speed = 100; 
 		} else {

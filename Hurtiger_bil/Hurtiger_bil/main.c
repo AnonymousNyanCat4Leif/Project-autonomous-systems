@@ -51,7 +51,7 @@ int main(void)
 	uint16_t filtered = 320;
 	uint8_t debug_counter = 0;
 	uint16_t accel_x = 0;
-	state_t current_state = LIGE;
+	state_t current_state = SVING;
 	uint16_t size = 15;
 	uint16_t rolling[15];
 	uint8_t index_rolling = 0;
@@ -87,45 +87,6 @@ int main(void)
 		}
 		
 
-		if (tick5ms) 
-		{
-            tick5ms = 0;
-			
-			uint16_t accel = ADC_Read(2);
-			
-			//filtered = (filtered * 3 + accel) / 4;
-			rolling[index_rolling] = accel;
-			index_rolling = (index_rolling + 1) % size;
-			filtered = 0;
-			for (uint8_t i = 0; i < size; i++)
-			{
-				filtered += rolling[i];
-			}
-			filtered = filtered/size;
-			
-			
-			char state = swing_detect(filtered);
-			if (state != current_state)
-			{
-				current_state = state;
-				bane_opmaaling(state);
-			}
-			
-			if (accel_x < accel)
-			{
-				accel_x = accel;
-			}
-			
-			
-			if (++debug_counter >= 20) 
-			{
-				debug_counter = 0;
-				
-				snprintf(buffer, sizeof(buffer), "\rX=%u Speed=%u ODO=%3d TopX=%u       ", filtered, speed, Bil.Odo, accel_x);
-				USART_Print(buffer);
-			}
-        }
-
 		if(Ur.LapFlag)  // N�r_LapFlag=1 betyder_det at der_har v�ret_en ICP_puls
 		{   
 			Beregn_hastighed_og_acc( ANTAL_FELTER);      // ANTAL_FELTER = 3 => 1 Omdr.
@@ -139,22 +100,79 @@ int main(void)
 			last_lap_count = lap_count;
 			snprintf(buffer, sizeof(buffer), "\r                                                                                           lap = %u", lap_count);
 			USART_Print(buffer);
-			
-			if (lap_count == 1)
+		}
+		
+		switch(lap_count)
+		{		
+		case 0:
+			if(tick5ms)
 			{
-				bane_build_segments(); // første omgang er færdig her og bygger bane
+				tick5ms = 0;
+				
+				if (++debug_counter >= 20)
+				{
+					debug_counter = 0;
+					
+					snprintf(buffer, sizeof(buffer), "\rSpeed=%u ODO=%3d TopX=%u Hast=%s acc=%s     ", speed, Bil.Odo, accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
+					USART_Print(buffer);
+				}
+				
+			}
+			break;
+		
+		case 1:
+			if(tick5ms)
+			{
+				tick5ms = 0;
+				uint16_t accel = ADC_Read(2);
+			
+				//filtered = (filtered * 3 + accel) / 4;
+				rolling[index_rolling] = accel;
+				index_rolling = (index_rolling + 1) % size;
+				filtered = 0;
+				for (uint8_t i = 0; i < size; i++)
+				{
+					filtered += rolling[i];
+				}
+				filtered = filtered/size;
+			
+			
+				state_t state = swing_detect(filtered);
+				if (state != current_state)
+				{
+					current_state = state;
+					bane_opmaaling(state);
+				}
+			
+				if (accel_x < filtered)
+				{
+					accel_x = filtered;
+				}
+				
+				if (++debug_counter >= 20)
+				{
+					debug_counter = 0;
+					
+					snprintf(buffer, sizeof(buffer), "\rX=%u Speed=%u ODO=%3d TopX=%u Hast=%s acc=%s     ", filtered, speed, Bil.Odo, accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
+					USART_Print(buffer);
+				}
+			}
+			break;
+				
+		case 2:
+			bane_opmaaling(LIGE);
+			lap_count++;
+		case 3:
+			bane_build_segments();
 			
 			snprintf(buffer, sizeof(buffer), "\r                                                                                                       Segmenter bygget!");
 			USART_Print(buffer);
-			}
-			
+			lap_count++;
+			break;
+		default:
+			bane_run();
+			break;	
 		}
-		if (lap_count > 1)
-		{
-				bane_run();
-				//bane_update_learning(); den skal tilføjes senere åbenbart
-		}
-
 	}
 }
 //======================= I n i t _ p o r t s ( ) ===========================
