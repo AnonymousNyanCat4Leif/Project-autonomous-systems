@@ -32,8 +32,6 @@ char buffer[256];
 ///////////////////////////////////  m a i n ()  funktion ///////////////////////////////
 int main(void)
 {
-    /*  */
-	int speedbar = 0;  // Til_hastighedsvisning p�_lysdioder
 	
 	Init_ports();
 	Init_speedometer();                // Ops�tning_af Timer1 capture_og Overflow
@@ -48,7 +46,7 @@ int main(void)
 	uint8_t speed = 0;
 	uint8_t lock = 0;
 	uint8_t last_lap_count = 0;
-	uint8_t last_lap_count2 = 0;
+	uint8_t last_lap_count2 = 7;
 	uint16_t debug_counter = 0;
 	uint16_t top_accel_x = 0; //hweuhw
 	state_t current_state = SVING;
@@ -118,7 +116,7 @@ int main(void)
 					snprintf(buffer, sizeof(buffer), "\rSpeed=%u ODO=%3d TopX=%u Hast=%s acc=%s     ", speed, Bil.Odo, top_accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
 					USART_Print(buffer);
 					
-					pwm_set_speed(83);
+					//pwm_set_speed(83);
 				}
 				
 			}
@@ -153,7 +151,7 @@ int main(void)
 			break;
 				
 		case 2:
-			bane_opmaaling(LIGE);
+			bane_opmaaling(SVING);
 			
 			lap_count++;
 			break;
@@ -166,6 +164,16 @@ int main(void)
 			
 			lap_count++;
 			break;
+			
+		case 4:
+			break;
+			
+		case 5:
+			break;
+				
+		case 6:
+			break;
+		
 			
 		default:
 			bane_run();

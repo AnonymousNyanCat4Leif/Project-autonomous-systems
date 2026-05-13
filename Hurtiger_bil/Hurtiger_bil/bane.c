@@ -100,12 +100,12 @@ void bane_build_segments(void)
 		
 		if (segments[segment_count].type == LIGE)
 		{
-			segments[segment_count].start = bane[i]-3;
-			segments[segment_count].end   = bane[i+1]-5;
-			segments[segment_count].speed = 100; 
+			segments[segment_count].start = bane[i];
+			segments[segment_count].end   = bane[i+1]-6;
+			segments[segment_count].speed = 255; 
 		} else {
-			segments[segment_count].start = bane[i]-5;
-			segments[segment_count].end   = bane[i+1]-3;
+			segments[segment_count].start = bane[i]-6;
+			segments[segment_count].end   = bane[i+1];
 			segments[segment_count].speed = 60;
 		}
 		
@@ -122,7 +122,7 @@ void bane_build_segments(void)
 	
 int find_segment(uint16_t odo)
 {
-	uint16_t position = odo % track_length;
+	uint16_t position = odo % track_length + bane[0];
 	
 	for (int i = 0; i < segment_count; i ++)
 	{
