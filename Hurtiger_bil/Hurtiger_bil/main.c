@@ -49,13 +49,9 @@ int main(void)
 	uint8_t lock = 0;
 	uint8_t last_lap_count = 0;
 	uint8_t last_lap_count2 = 0;
-	uint16_t filtered = 0;
-	uint8_t debug_counter = 0;
-	uint16_t accel_x = 0;
+	uint16_t debug_counter = 0;
+	uint16_t top_accel_x = 0; //hweuhw
 	state_t current_state = SVING;
-	uint16_t size = 15;
-	uint16_t rolling[size];
-	uint8_t index_rolling = 0;
 	uint16_t distance = 0;
 
 
@@ -91,7 +87,7 @@ int main(void)
 
 		if(Ur.LapFlag)  // N�r_LapFlag=1 betyder_det at der_har v�ret_en ICP_puls
 		{   
-			Beregn_hastighed_og_acc( ANTAL_FELTER);      // ANTAL_FELTER = 3 => 1 Omdr.
+			Beregn_hastighed_og_acc(ANTAL_FELTER);      // ANTAL_FELTER = 3 => 1 Omdr.
 			// Bem�rk_at de_f�lgende 2 statements skriver_tekst p�_PC_sk�rmen 
 			// hvis_der er_installeret den_rette USB/UART driver og_et_terminalprogram
 			//  %3d => udskrift af integer og  %8s udskrift af string (tal er feltbredde)
@@ -113,12 +109,16 @@ int main(void)
 			{
 				tick5ms = 0;
 				
-				if (++debug_counter >= 20)
+				uint16_t accel_x = Accelerometer(2);		// we run the Accelerometer here to fill the moving average filter
+				
+				if (++debug_counter >= 1000)
 				{
 					debug_counter = 0;
 					
-					snprintf(buffer, sizeof(buffer), "\rSpeed=%u ODO=%3d TopX=%u Hast=%s acc=%s     ", speed, Bil.Odo, accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
+					snprintf(buffer, sizeof(buffer), "\rSpeed=%u ODO=%3d TopX=%u Hast=%s acc=%s     ", speed, Bil.Odo, top_accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
 					USART_Print(buffer);
+					
+					pwm_set_speed(83);
 				}
 				
 			}
@@ -128,36 +128,25 @@ int main(void)
 			if(tick5ms)
 			{
 				tick5ms = 0;
-				uint16_t accel = ADC_Read(2);
+				uint16_t accel_x = Accelerometer(2);
 			
-				//filtered = (filtered * 3 + accel) / 4;
-				rolling[index_rolling] = accel;
-				index_rolling = (index_rolling + 1) % size;
-				filtered = 0;
-				for (uint8_t i = 0; i < size; i++)
-				{
-					filtered += rolling[i];
-				}
-				filtered = filtered/size;
-			
-			
-				state_t state = swing_detect(filtered);
+				state_t state = swing_detect(accel_x);
 				if (state != current_state)
 				{
 					current_state = state;
 					bane_opmaaling(state);
 				}
 			
-				if (accel_x < filtered)
+				if (top_accel_x < accel_x)
 				{
-					accel_x = filtered;
+					top_accel_x = accel_x;
 				}
 				
 				if (++debug_counter >= 20)
 				{
 					debug_counter = 0;
 					
-					snprintf(buffer, sizeof(buffer), "\rX=%u Speed=%u ODO=%3d TopX=%u Hast=%s acc=%s     ", filtered, speed, Bil.Odo, accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
+					snprintf(buffer, sizeof(buffer), "\rX=%u Speed=%u ODO=%3d TopX=%u Hast=%s acc=%s     ", accel_x, speed, Bil.Odo, top_accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
 					USART_Print(buffer);
 				}
 			}
