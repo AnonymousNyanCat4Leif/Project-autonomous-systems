@@ -97,12 +97,15 @@ void bane_build_segments(void)
 		
 	for (int i = 0; i < bane_index -1; i++)
 	{
-		segments[segment_count].start = bane[i];
-		segments[segment_count].end   = bane[i+1];
+		
 		if (segments[segment_count].type == LIGE)
 		{
+			segments[segment_count].start = bane[i]-3;
+			segments[segment_count].end   = bane[i+1]-5;
 			segments[segment_count].speed = 100; 
 		} else {
+			segments[segment_count].start = bane[i]-5;
+			segments[segment_count].end   = bane[i+1]-3;
 			segments[segment_count].speed = 60;
 		}
 		
@@ -111,6 +114,8 @@ void bane_build_segments(void)
 	if (segment_count > 0)
 	{
 	track_length = segments[segment_count - 1].end;
+	snprintf(buffer, sizeof(buffer), "calculated track length = %u\r\n", track_length);
+	USART_Print(buffer);
 	}
 }
 //her finder den hvor bilen befinder sig på banen gennem segmenter
@@ -145,22 +150,21 @@ void bane_run(void)
 		}
 	}
 }
-//void bane_update_learning(void)
-//{
-	//int seg = find_segment(bil.odo);
-		//
-	//if (seg < 0) return;
-		//
-	//if (bil.acceleration < -5){
-		//segments[seg].speed -= 2;
-	//}
-	//else if (bil.acceleration > 0){
-		//segments[seg].speed += 1;
-	//}
-	//
-////her kommer der nogle begrænsninger 
-	//if (segments[seg].speed > 100) segments[seg].speed = 100;
-	//if (segments[seg].speed < 40)  segments[seg].speed = 40;	
-//}
+
+void bane_update_learning(void)
+{
+	segment_count = 0;
 	
-	
+	for (int i = 0; i < bane_index -1; i++)
+	{
+		
+		if (segments[segment_count].type == LIGE)
+		{
+			segments[segment_count].speed += 10;
+		} else {
+			segments[segment_count].speed += 3;
+		}
+
+		segment_count++;
+	}
+}

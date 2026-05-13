@@ -48,13 +48,15 @@ int main(void)
 	uint8_t speed = 0;
 	uint8_t lock = 0;
 	uint8_t last_lap_count = 0;
-	uint16_t filtered = 320;
+	uint8_t last_lap_count2 = 0;
+	uint16_t filtered = 0;
 	uint8_t debug_counter = 0;
 	uint16_t accel_x = 0;
 	state_t current_state = SVING;
 	uint16_t size = 15;
-	uint16_t rolling[15];
+	uint16_t rolling[size];
 	uint8_t index_rolling = 0;
+	uint16_t distance = 0;
 
 
 	while (1) 
@@ -66,7 +68,7 @@ int main(void)
 
 			switch (lock)
 			{
-			case 0:	// confirms it is an actual value and not noice
+			case 0:	// confirms it is an actual value and not noise
 				if (c == 's'){
 					speed = 0;
 					lock = 1;
@@ -98,7 +100,9 @@ int main(void)
 		if (lap_count != last_lap_count)
 		{
 			last_lap_count = lap_count;
-			snprintf(buffer, sizeof(buffer), "\r                                                                                           lap = %u", lap_count);
+			uint16_t lap_lenght = Bil.Odo - distance;
+			distance = Bil.Odo;
+			snprintf(buffer, sizeof(buffer), "\r                                                                                           lap = %u length = %3d", lap_count, lap_lenght);
 			USART_Print(buffer);
 		}
 		
@@ -161,16 +165,27 @@ int main(void)
 				
 		case 2:
 			bane_opmaaling(LIGE);
+			
 			lap_count++;
+			break;
+			
 		case 3:
 			bane_build_segments();
 			
-			snprintf(buffer, sizeof(buffer), "\r                                                                                                       Segmenter bygget!");
+			snprintf(buffer, sizeof(buffer), "\r                                                                                                                               Segmenter bygget!");
 			USART_Print(buffer);
+			
 			lap_count++;
 			break;
+			
 		default:
 			bane_run();
+			
+			if (lap_count != last_lap_count2)
+			{
+				bane_update_learning();
+				last_lap_count2 = lap_count;
+			}
 			break;	
 		}
 	}
