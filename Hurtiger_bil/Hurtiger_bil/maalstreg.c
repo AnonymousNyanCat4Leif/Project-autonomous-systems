@@ -30,7 +30,7 @@ ISR(INT0_vect)
 		if (lap_count < MAX_LAPS)
 		{
 			lap_count++;
-		} else if (lap_count >= MAX_LAPS)
+		} else
 		{
 			lap_count = 0;
 		}

@@ -22,18 +22,16 @@
 #include "maalstreg.h"
 #include "bane.h"
 
-void Init_ports( );    // Declaration of a function to be implemented later
-
 
 extern volatile uint16_t lap_count;
 char buffer[256];
+uint8_t speed = 0;
+uint16_t top_accel_x = 0;
 
 
 ///////////////////////////////////  m a i n ()  funktion ///////////////////////////////
 int main(void)
 {
-	
-	Init_ports();
 	Init_speedometer();                // Ops�tning_af Timer1 capture_og Overflow
 	//Det_er rart_at kunne_skrive tekst_og data p�_PC sk�rmen_ - derfor_den_ops�tning
 	USART_Init(MYUBRR);
@@ -43,12 +41,10 @@ int main(void)
 	INT0_init();
 	sei();
 
-	uint8_t speed = 0;
 	uint8_t lock = 0;
 	uint8_t last_lap_count = 0;
 	uint8_t last_lap_count2 = 7;
 	uint16_t debug_counter = 0;
-	uint16_t top_accel_x = 0; //hweuhw
 	state_t current_state = SVING;
 	uint16_t distance = 0;
 
@@ -57,7 +53,8 @@ int main(void)
 	{		
 		int value = USART_Receive();
 //
-		if (value >=0){ // Wait for the first speed 
+		if (value >=0)
+		{ // Wait for the first speed 
 			char c = (char)value;
 
 			switch (lock)
@@ -75,7 +72,7 @@ int main(void)
 				}
 				else if (c == '\r' || c == '\n'){
 					pwm_set_speed(speed);
-					snprintf(buffer, sizeof(buffer), "Motor started at speed %u\r\n", speed);
+					snprintf(buffer, sizeof(buffer), "[CMD] Motor speed set to %u\r\n", speed);
 					USART_Print(buffer);
 					lock = 0; // go pack to waiting for the next speed command
 				}
@@ -94,9 +91,9 @@ int main(void)
 		if (lap_count != last_lap_count)
 		{
 			last_lap_count = lap_count;
-			uint16_t lap_lenght = Bil.Odo - distance;
+			uint16_t lap_length = Bil.Odo - distance;
 			distance = Bil.Odo;
-			snprintf(buffer, sizeof(buffer), "\r                                                                                           lap = %u length = %3d", lap_count, lap_lenght);
+			snprintf(buffer, sizeof(buffer), "[LAP] Lap=%u  Length=%u pulses\r\n", lap_count, lap_length);
 			USART_Print(buffer);
 		}
 		
@@ -113,10 +110,8 @@ int main(void)
 				{
 					debug_counter = 0;
 					
-					snprintf(buffer, sizeof(buffer), "\rSpeed=%u ODO=%3d TopX=%u Hast=%s acc=%s     ", speed, Bil.Odo, top_accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
+					snprintf(buffer, sizeof(buffer), "[IDLE] Speed=%3u  ODO=%4d  TopX=%4u  Hast=%s  Acc=%s\r\n", speed, Bil.Odo, top_accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
 					USART_Print(buffer);
-					
-					//pwm_set_speed(83);
 				}
 				
 			}
@@ -144,7 +139,7 @@ int main(void)
 				{
 					debug_counter = 0;
 					
-					snprintf(buffer, sizeof(buffer), "\rX=%u Speed=%u ODO=%3d TopX=%u Hast=%s acc=%s     ", accel_x, speed, Bil.Odo, top_accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
+					snprintf(buffer, sizeof(buffer), "[MAP] AccX=%u Speed=%u ODO=%3d TopX=%u Hast=%s Acc=%s\r\n", accel_x, speed, Bil.Odo, top_accel_x, floatstr(Bil.Hastighed), floatstr(Bil.Acceleration));
 					USART_Print(buffer);
 				}
 			}
@@ -153,11 +148,15 @@ int main(void)
 		case 2:
 			bane_opmaaling(SVING);
 			
+			USART_Print("[MAP] Mapping complete. Building segments...\r\n");
+			
 			lap_count++;
 			break;
 			
 		case 3:
 			bane_build_segments();
+			
+			USART_Print("[SEG] Segments built. Ready to race.\r\n");
 			
 			snprintf(buffer, sizeof(buffer), "\r                                                                                                                               Segmenter bygget!");
 			USART_Print(buffer);
@@ -182,19 +181,12 @@ int main(void)
 			{
 				bane_update_learning();
 				last_lap_count2 = lap_count;
+				snprintf(buffer, sizeof(buffer), "[LEARN] Lap %u done. Speed turns=%u  straights=%u\r\n", lap_count, speed_turns, speed_straights);
+				USART_Print(buffer);
 			}
 			break;	
 		}
 	}
-}
-//======================= I n i t _ p o r t s ( ) ===========================
-// Note - the function takes no parameters and return nothing, hence void
-void Init_ports( )
-{	DDRD  &= ~(1<<PD6);	    // setup PORTD, bit6 and bit2 as input with ....
-	PORTD |= (1<<PD6);   // AKTIV�R PULL-UP
-	//PORTD = PORTD | 0b01000100; // UPS! internal pull-up enabled .. not needed
-	DDRC  = 0x00;	// setup PORTC as input with ....
-	PORTC = 0xFF;	// internal pull-up enabled
 }
 
 

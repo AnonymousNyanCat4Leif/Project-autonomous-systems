@@ -11,6 +11,11 @@
 
 #include <stdint.h>
 
+extern uint8_t speed;
+extern uint16_t top_accel_x;
+extern uint8_t speed_turns;
+extern uint8_t speed_straights;
+
 typedef enum {
 	LIGE,
 	SVING
@@ -22,6 +27,11 @@ typedef struct {
 	uint8_t speed;
 	state_t type;
 } Segment;
+
+typedef struct {
+	int segment;
+	uint16_t pos;
+} seg_pos;
 
 void bane_opmaaling(state_t);
 state_t swing_detect(uint16_t accel_x);

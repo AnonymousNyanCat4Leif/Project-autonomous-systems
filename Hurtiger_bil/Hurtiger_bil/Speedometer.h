@@ -24,8 +24,6 @@ struct Bil_t
     float OldHastighed;     // Den forrige_hastighedsmåling
 	float Hastighed;        // Den aktuelle_hastighedsmåling
 	float Acceleration;     // Hastighedsændring_= Acc/Deceleration
-	int   Hast;             // Hastighed som_integer
-	int   Acc;			    // Accelleration_som_integer
 	int   Odo;              // Afstandsmåler_til Speedometer
 } Bil;
 

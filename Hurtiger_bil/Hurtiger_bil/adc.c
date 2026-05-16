@@ -7,12 +7,6 @@
 
 #include "adc.h"
 
-uint16_t accel = 0;
-uint16_t accel_filtered = 0;
-uint16_t size = 15;
-uint16_t rolling[15];
-uint8_t index_rolling = 0;
-
 void ADC_Init(void)
 {
 	ADMUX = 0;		// AVCC reference
@@ -30,13 +24,16 @@ uint16_t ADC_Read(uint8_t channel)
 
 uint16_t Accelerometer(uint8_t channel)
 {
-	accel = ADC_Read(channel);
+	static uint16_t rolling[15];
+	static uint8_t index_rolling = 0;	
+	uint16_t accel =  ADC_Read(channel);
+	uint16_t accel_filtered = 0;
+	
 	rolling[index_rolling] = accel;
-	index_rolling = (index_rolling + 1) % size;
-	accel_filtered = 0;
-	for (uint8_t i = 0; i < size; i++)
+	index_rolling = (index_rolling + 1) % 15;
+	for (uint8_t i = 0; i < 15; i++)
 	{
 		accel_filtered += rolling[i];
 	}
-	return accel_filtered/size;
+	return accel_filtered/15;
 }

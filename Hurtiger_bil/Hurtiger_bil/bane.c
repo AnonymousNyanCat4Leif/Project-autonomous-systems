@@ -15,8 +15,8 @@
 #define TURN 30
 #define STRAIGHT 338
 #define MAX_SEGMENTS 50
-#define ENTER_COUNT 4
-#define EXIT_COUNT  10
+#define BREAKING_DIST 10
+#define MAX_ACCEL_X 490
 
 
 char buffer[64]; 
@@ -26,7 +26,6 @@ extern struct Bil_t Bil;
 uint16_t bane[MAX_SEGMENTS];
 uint8_t bane_index = 0;
 uint16_t oldOdo = 0;
-uint16_t lenght = 0;
 uint8_t count = 0;
 Segment segments[MAX_SEGMENTS];
 	
@@ -34,8 +33,6 @@ static state_t state = LIGE;
 	
 state_t swing_detect(uint16_t accel_x)
 {
-	static state_t state = LIGE;
-
 	if (state == LIGE)
 	{
 		if (accel_x < STRAIGHT-TURN || accel_x > STRAIGHT+TURN)
@@ -58,37 +55,27 @@ void bane_opmaaling(state_t state)
 	if (bane_index < MAX_SEGMENTS)
 	{
 		bane[bane_index++] = Bil.Odo;
-		lenght = Bil.Odo - oldOdo;
-		if (state == LIGE)
-		{
-			snprintf(buffer, sizeof(buffer), "l %u", lenght);
-			USART_Print(buffer);
-			segments[count].type = LIGE;
-			count++;
-		} else
-		{
-			snprintf(buffer, sizeof(buffer), "s %u", lenght);
-			USART_Print(buffer);
-			segments[count].type = SVING;
-			count++;
-		}
+		uint16_t length = Bil.Odo - oldOdo;
+
+		const char *type_str = (state == LIGE) ? "STRAIGHT" : "TURN";
+		snprintf(buffer, sizeof(buffer), "[SEG] %s  length=%u pulses\r\n", type_str, length);
+		USART_Print(buffer);
+
+		segments[count].type = state;
+		count++;
 		oldOdo = Bil.Odo;
-	}	
+	}
 }
 
-
-void bane_reset(void)
-{
-	bane_index = 0;
-	state = LIGE;
-}
 // Husk Bil.Odo måler afstand målt i pulstællinger
 //gemmer segmenter 
 
 	
 uint8_t segment_count = 0;
-uint8_t last_seg = 0;
+uint8_t last_speed = 0;
 uint16_t track_length = 0;
+uint8_t speed_turns = 60;
+uint8_t speed_straights = 120;
 
 	
 void bane_build_segments(void)
@@ -102,69 +89,77 @@ void bane_build_segments(void)
 		{
 			segments[segment_count].start = bane[i];
 			segments[segment_count].end   = bane[i+1]-6;
-			segments[segment_count].speed = 255; 
+			segments[segment_count].speed = speed_straights; 
 		} else {
 			segments[segment_count].start = bane[i]-6;
 			segments[segment_count].end   = bane[i+1];
-			segments[segment_count].speed = 60;
+			segments[segment_count].speed = speed_turns;
 		}
 		
 		segment_count++;
 	}
 	if (segment_count > 0)
 	{
-	track_length = segments[segment_count - 1].end;
-	snprintf(buffer, sizeof(buffer), "calculated track length = %u\r\n", track_length);
-	USART_Print(buffer);
+		track_length = segments[segment_count - 1].end - bane[0];
+		snprintf(buffer, sizeof(buffer), "[SEG] Track length = %u pulses  Segments = %u\r\n", track_length, segment_count);
+		USART_Print(buffer);
 	}
 }
 //her finder den hvor bilen befinder sig på banen gennem segmenter
 	
-int find_segment(uint16_t odo)
+seg_pos find_segment(uint16_t odo)
 {
-	uint16_t position = odo % track_length + bane[0];
+	seg_pos r;
+	r.segment = -1;
+	
+	r.pos = odo % track_length + bane[0];
 	
 	for (int i = 0; i < segment_count; i ++)
 	{
-		if (position >= segments[i].start && position < segments[i].end)
+		if (r.pos >= segments[i].start && r.pos < segments[i].end)
 		{
-			return i;
+			r.segment = i;
+			return r;
 		}
 	}
-	return -1;
+	return r;
 }
 	
 void bane_run(void)
 {
-	int seg = find_segment(Bil.Odo);
-		
-	if (seg >= 0){
-		pwm_set_speed(segments[seg].speed);
-			
-		//printer en fart når segmenterne ændre sig
-		if (seg != last_seg){
-			last_seg = seg;
-				
-			snprintf(buffer, sizeof(buffer), "segment %d, speed %u\r\n", seg, segments[seg].speed);
-			USART_Print(buffer);
-		}
+	seg_pos r = find_segment(Bil.Odo);
+
+	if (r.segment < 0)
+	return;
+
+	uint16_t dist_left = segments[r.segment].end - r.pos;
+	uint8_t new_speed;
+
+	if (segments[r.segment].type == LIGE && dist_left < BREAKING_DIST)
+	{
+		uint8_t diff = speed_straights - speed_turns;
+		new_speed = speed_turns + ((diff * dist_left) / BREAKING_DIST);
+	}
+	else
+	{
+		new_speed = segments[r.segment].speed;
+	}
+
+	pwm_set_speed(new_speed);
+
+	if (new_speed != last_speed)
+	{
+		last_speed = new_speed;
+		snprintf(buffer, sizeof(buffer), "[RUN] Seg=%d  %s  distLeft=%u  speed=%u\r\n", r.segment, (segments[r.segment].type == LIGE) ? "STRAIGHT" : "TURN", dist_left, new_speed);
+		USART_Print(buffer);
 	}
 }
 
 void bane_update_learning(void)
 {
-	segment_count = 0;
-	
-	for (int i = 0; i < bane_index -1; i++)
+	if (top_accel_x < MAX_ACCEL_X)
 	{
-		
-		if (segments[segment_count].type == LIGE)
-		{
-			segments[segment_count].speed += 10;
-		} else {
-			segments[segment_count].speed += 3;
-		}
-
-		segment_count++;
+		speed_turns += 3;
 	}
+	speed_straights += 10;
 }

@@ -16,7 +16,10 @@
 // Man kan_med andre_ord_danne en 32 bits tidsmåling_= MSW<<16 + ICR1
 //-----------------------------------------------------------------------------;
 void Init_speedometer( )
-{   TIFR  |= 1<<ICF1;	 // Clear: Input Capture Flag timer 1 (bit 5)
+{   DDRD  &= ~(1<<PD6);	    // setup PORTD, bit6 and bit2 as input with ....
+	PORTD |= (1<<PD6);   // AKTIV?R PULL-UP
+	
+	TIFR  |= 1<<ICF1;	 // Clear: Input Capture Flag timer 1 (bit 5)
 	TIMSK &= ~0x18;      // Set bit 4,3 to zero
 	TIMSK |= 1<<TOIE1;   // Timer1 Overflow interrupt Enable (bit 2)
 	TIMSK |= 1<<TICIE1;	 // Timer1 Input Capture Interrupt Enable (bit 5)
@@ -62,9 +65,7 @@ void Beregn_hastighed_og_acc( int Tn)
 	Bil.OldHastighed = Bil.Hastighed;
 	Bil.Hastighed    = PULS_AFSTAND * Tn / Bil.Periodetid;
 	Bil.Acceleration = 100000.0 *(Bil.Hastighed - Bil.OldHastighed)/ Bil.Periodetid;
-	                                 // 100000.0 er_tilfældigt_valgt	 
-	Bil.Hast = Bil.Hastighed;        // Lagre_som int
-	Bil.Acc = 10*Bil.Acceleration;   // Lagre_acc (10 er_tilfældigt_valgt)
+	                                 // 100000.0 er_tilfældigt_valgt
 }
 
 
