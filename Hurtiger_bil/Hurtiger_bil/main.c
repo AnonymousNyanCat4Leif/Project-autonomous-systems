@@ -158,9 +158,6 @@ int main(void)
 			
 			USART_Print("[SEG] Segments built. Ready to race.\r\n");
 			
-			snprintf(buffer, sizeof(buffer), "\r                                                                                                                               Segmenter bygget!");
-			USART_Print(buffer);
-			
 			lap_count++;
 			break;
 			
